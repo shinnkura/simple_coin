@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           children: [
             ListTile(
-              title: const Text('User Mode'),
+              title: const Text('ホ ー ム'),
               onTap: () {
                 setState(() {
                   isAdmin = false;
@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             ListTile(
-              title: const Text('Admin Mode'),
+              title: const Text('管 理 画 面'),
               onTap: () async {
                 await _showPasswordDialog();
                 // ignore: use_build_context_synchronously
