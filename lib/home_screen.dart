@@ -14,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool isAdmin = false;
-  String password = 'admin123';
+  String password = '1010';
 
   @override
   Widget build(BuildContext context) {
