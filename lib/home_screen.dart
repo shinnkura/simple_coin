@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'components/custom_bottom_appbar.dart';
 import 'models/user.dart';
+import 'screens/user_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -103,46 +104,11 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: Text('Coins: ${users[index].coins}'),
           onTap: () {
             setState(() {
-              users[index].coins += 10;
+              users[index].coins += 1;
             });
           },
         );
       },
-    );
-  }
-}
-
-class UserScreen extends StatefulWidget {
-  final User user;
-
-  const UserScreen({super.key, required this.user});
-
-  @override
-  // ignore: library_private_types_in_public_api
-  _UserScreenState createState() => _UserScreenState();
-}
-
-class _UserScreenState extends State<UserScreen> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.user.name)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Coins: ${widget.user.coins}'),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  widget.user.coins--;
-                });
-              },
-              child: const Text('Decrease Coins'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
