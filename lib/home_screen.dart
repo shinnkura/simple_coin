@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'components/custom_bottom_appbar.dart';
 import 'models/user.dart';
 import 'screens/user_screen.dart';
 
@@ -26,32 +25,32 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 16.0),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(30),
-            child: Container(
-              padding: const EdgeInsets.all(2.0),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            ListTile(
+              title: const Text('User Mode'),
+              onTap: () {
+                setState(() {
+                  isAdmin = false;
+                });
+                Navigator.pop(context);
+              },
             ),
-          ),
+            ListTile(
+              title: const Text('Admin Mode'),
+              onTap: () async {
+                await _showPasswordDialog();
+                // ignore: use_build_context_synchronously
+                Navigator.pop(context);
+              },
+            ),
+          ],
         ),
       ),
       body: isAdmin ? buildAdminScreen() : buildUserScreen(),
-      bottomNavigationBar: CustomBottomAppBar(
-        onUserPressed: () {
-          setState(() {
-            isAdmin = false;
-          });
-        },
-        onAdminPressed: () async {
-          // Admin ボタンが押されたときの処理
-          await _showPasswordDialog();
-        },
-      ),
     );
   }
 
