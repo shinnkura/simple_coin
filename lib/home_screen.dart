@@ -183,6 +183,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text(users[index].name),
                 subtitle: Text('Coins: ${users[index].coins}'),
                 trailing: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green, // ボタンの背景色を緑に設定
+                  ),
                   onPressed: () async {
                     // コインを増加させる処理
                     try {
