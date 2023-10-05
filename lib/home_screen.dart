@@ -7,6 +7,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _HomeScreenState createState() => _HomeScreenState();
 }
 
@@ -43,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('管 理 画 面'),
               onTap: () async {
                 await _showPasswordDialog();
+                // ignore: use_build_context_synchronously
                 Navigator.pop(context);
               },
             ),
@@ -140,6 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               }
                             });
                           } catch (e) {
+                            // ignore: use_build_context_synchronously
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('An error occurred: $e')),
                             );
