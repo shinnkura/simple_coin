@@ -1,19 +1,19 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'models/user.dart';
-import 'screens/user_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   bool isAdmin = false;
   String password = '1010';
+  bool isDecreasing = false; // ボタンが押されているかどうかを判定するフラグ
 
   @override
   Widget build(BuildContext context) {
@@ -43,14 +43,13 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('管 理 画 面'),
               onTap: () async {
                 await _showPasswordDialog();
-                // ignore: use_build_context_synchronously
                 Navigator.pop(context);
               },
             ),
           ],
         ),
       ),
-      body: isAdmin ? buildAdminScreen() : buildUserScreen(),
+      body: buildFirestoreUserScreen(),
     );
   }
 
@@ -93,38 +92,67 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // User Screen
-  Widget buildUserScreen() {
-    return ListView.builder(
-      itemCount: users.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(users[index].name),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => UserScreen(user: users[index]),
+  // Firestoreからデータを取得して表示するWidget
+
+  Widget buildFirestoreUserScreen() {
+    return StreamBuilder(
+      stream: FirebaseFirestore.instance.collection('users').snapshots(),
+      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (!snapshot.hasData) {
+          return const CircularProgressIndicator();
+        }
+
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
+
+        List<User> users = snapshot.data!.docs.map((doc) {
+          return User.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        }).toList();
+
+        return ListView.builder(
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            return Card(
+              child: ListTile(
+                leading: const Icon(Icons.person),
+                title: Text(users[index].name),
+                subtitle: Text('Coins: ${users[index].coins}'),
+                trailing: ElevatedButton(
+                  onPressed: isDecreasing
+                      ? null
+                      : () async {
+                          // ボタンが押されている場合は無効化
+                          setState(() {
+                            isDecreasing = true; // ボタンが押された状態にする
+                          });
+                          try {
+                            await FirebaseFirestore.instance
+                                .runTransaction((transaction) async {
+                              DocumentSnapshot snapshot = await transaction.get(
+                                  FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(users[index].id));
+                              if (snapshot.exists) {
+                                int newCoins = snapshot.get('coins') - 1;
+                                transaction.update(
+                                    snapshot.reference, {'coins': newCoins});
+                              }
+                            });
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('An error occurred: $e')),
+                            );
+                          } finally {
+                            setState(() {
+                              isDecreasing = false; // ボタンが押された状態を解除
+                            });
+                          }
+                        },
+                  child: const Text('Decrease'),
+                ),
               ),
             );
-          },
-        );
-      },
-    );
-  }
-
-  // Admin Screen
-  Widget buildAdminScreen() {
-    return ListView.builder(
-      itemCount: users.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(users[index].name),
-          subtitle: Text('Coins: ${users[index].coins}'),
-          onTap: () {
-            setState(() {
-              users[index].coins += 1;
-            });
           },
         );
       },
