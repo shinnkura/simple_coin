@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 import 'models/user.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool isAdmin = false;
   String password = '1010';
-  bool isDecreasing = false; // ボタンが押されているかどうかを判定するフラグ
+  List<bool> isDecreasingList = []; // 各ボタンの状態を管理するリスト
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('管 理 画 面'),
               onTap: () async {
                 await _showPasswordDialog();
-                // ignore: use_build_context_synchronously
                 Navigator.pop(context);
               },
             ),
@@ -80,9 +78,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   setState(() {
                     isAdmin = true;
                   });
-                } else {
-                  // パスワードが間違っている場合の処理
-                  // ここでは何もしない
                 }
                 Navigator.of(context).pop();
               },
@@ -93,8 +88,6 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
-  // Firestoreからデータを取得して表示するWidget
 
   Widget buildUserScreen() {
     return StreamBuilder(
@@ -112,6 +105,9 @@ class _HomeScreenState extends State<HomeScreen> {
           return User.fromMap(doc.data() as Map<String, dynamic>, doc.id);
         }).toList();
 
+        // ユーザー数に合わせてisDecreasingListを初期化
+        isDecreasingList = List<bool>.filled(users.length, false);
+
         return ListView.builder(
           itemCount: users.length,
           itemBuilder: (context, index) {
@@ -121,12 +117,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text(users[index].name),
                 subtitle: Text('Coins: ${users[index].coins}'),
                 trailing: ElevatedButton(
-                  onPressed: isDecreasing
+                  onPressed: isDecreasingList[index]
                       ? null
                       : () async {
-                          // ボタンが押されている場合は無効化
                           setState(() {
-                            isDecreasing = true; // ボタンが押された状態にする
+                            isDecreasingList[index] = true;
                           });
                           try {
                             await FirebaseFirestore.instance
@@ -142,13 +137,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               }
                             });
                           } catch (e) {
-                            // ignore: use_build_context_synchronously
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('An error occurred: $e')),
                             );
                           } finally {
                             setState(() {
-                              isDecreasing = false; // ボタンが押された状態を解除
+                              isDecreasingList[index] = false;
                             });
                           }
                         },
