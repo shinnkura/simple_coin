@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: buildFirestoreUserScreen(),
+      body: buildUserScreen(),
     );
   }
 
@@ -96,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Firestoreからデータを取得して表示するWidget
 
-  Widget buildFirestoreUserScreen() {
+  Widget buildUserScreen() {
     return StreamBuilder(
       stream: FirebaseFirestore.instance.collection('users').snapshots(),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
