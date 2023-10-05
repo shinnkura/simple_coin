@@ -43,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('管 理 画 面'),
               onTap: () async {
                 await _showPasswordDialog();
+                // ignore: use_build_context_synchronously
                 Navigator.pop(context);
               },
             ),
