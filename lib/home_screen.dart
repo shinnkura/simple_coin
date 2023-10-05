@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: buildUserScreen(),
+      body: isAdmin ? buildAdminScreen() : buildUserScreen(),
     );
   }
 
@@ -137,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               }
                             });
                           } catch (e) {
+                            // ignore: use_build_context_synchronously
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('An error occurred: $e')),
                             );
@@ -147,6 +148,56 @@ class _HomeScreenState extends State<HomeScreen> {
                           }
                         },
                   child: const Text('Decrease'),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // 管理画面を構築するメソッド
+  Widget buildAdminScreen() {
+    return StreamBuilder(
+      stream: FirebaseFirestore.instance.collection('users').snapshots(),
+      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (!snapshot.hasData) {
+          return const CircularProgressIndicator();
+        }
+
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
+
+        List<User> users = snapshot.data!.docs.map((doc) {
+          return User.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        }).toList();
+
+        return ListView.builder(
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            return Card(
+              child: ListTile(
+                leading: const Icon(Icons.person),
+                title: Text(users[index].name),
+                subtitle: Text('Coins: ${users[index].coins}'),
+                trailing: ElevatedButton(
+                  onPressed: () async {
+                    // コインを増加させる処理
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(users[index].id)
+                          .update({'coins': users[index].coins + 1});
+                    } catch (e) {
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('An error occurred: $e')),
+                      );
+                    }
+                  },
+                  child: const Text('Increase'), // 増加ボタン
                 ),
               ),
             );
