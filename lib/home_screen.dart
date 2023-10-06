@@ -13,7 +13,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool isAdmin = false;
   String password = '1010';
-  List<bool> isDecreasingList = []; // 各ボタンの状態を管理するリスト
 
   @override
   Widget build(BuildContext context) {
@@ -90,24 +89,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ユーザー画面を構築するメソッド
   Widget buildUserScreen() {
-    return FutureBuilder<QuerySnapshot>(
-      future: FirebaseFirestore.instance.collection('users').get(),
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (!snapshot.hasData) {
           return const CircularProgressIndicator();
-        }
-
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
         }
 
         List<User> users = snapshot.data!.docs.map((doc) {
           return User.fromMap(doc.data() as Map<String, dynamic>, doc.id);
         }).toList();
-
-        // ユーザー数に合わせてisDecreasingListを初期化
-        isDecreasingList = List<bool>.filled(users.length, false);
 
         return ListView.builder(
           itemCount: users.length,
@@ -158,42 +151,21 @@ class _HomeScreenState extends State<HomeScreen> {
           return const CircularProgressIndicator();
         }
 
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-
-        List<User> users = snapshot.data!.docs.map((doc) {
-          return User.fromMap(doc.data() as Map<String, dynamic>, doc.id);
-        }).toList();
-
         return ListView.builder(
-          itemCount: users.length,
+          itemCount: snapshot.data!.docs.length,
           itemBuilder: (context, index) {
-            return Card(
-              child: ListTile(
-                leading: const Icon(Icons.person),
-                title: Text(users[index].name),
-                subtitle: Text('Coins: ${users[index].coins}'),
-                trailing: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // ボタンの背景色を緑に設定
-                  ),
-                  onPressed: () async {
-                    // コインを増加させる処理
-                    try {
-                      await FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(users[index].id)
-                          .update({'coins': users[index].coins + 1});
-                    } catch (e) {
-                      // ignore: use_build_context_synchronously
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('An error occurred: $e')),
-                      );
-                    }
-                  },
-                  child: const Text('Increase'), // 増加ボタン
-                ),
+            DocumentSnapshot doc = snapshot.data!.docs[index];
+            return ListTile(
+              title: Text(doc['name']),
+              subtitle: Text('Coins: ${doc['coins']}'),
+              trailing: ElevatedButton(
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(doc.id)
+                      .update({'coins': doc['coins'] + 1});
+                },
+                child: const Text('Increase'),
               ),
             );
           },
