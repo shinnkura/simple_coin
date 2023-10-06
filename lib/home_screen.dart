@@ -91,10 +91,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget buildUserScreen() {
-    return StreamBuilder(
-      stream: FirebaseFirestore.instance.collection('users').snapshots(),
-      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (!snapshot.hasData) {
+    return FutureBuilder<QuerySnapshot>(
+      future: FirebaseFirestore.instance.collection('users').get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const CircularProgressIndicator();
         }
 
@@ -118,36 +118,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text(users[index].name),
                 subtitle: Text('Coins: ${users[index].coins}'),
                 trailing: ElevatedButton(
-                  onPressed: isDecreasingList[index]
-                      ? null
-                      : () async {
-                          setState(() {
-                            isDecreasingList[index] = true;
-                          });
-                          try {
-                            await FirebaseFirestore.instance
-                                .runTransaction((transaction) async {
-                              DocumentSnapshot snapshot = await transaction.get(
-                                  FirebaseFirestore.instance
-                                      .collection('users')
-                                      .doc(users[index].id));
-                              if (snapshot.exists) {
-                                int newCoins = snapshot.get('coins') - 1;
-                                transaction.update(
-                                    snapshot.reference, {'coins': newCoins});
-                              }
-                            });
-                          } catch (e) {
-                            // ignore: use_build_context_synchronously
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('An error occurred: $e')),
-                            );
-                          } finally {
-                            setState(() {
-                              isDecreasingList[index] = false;
-                            });
-                          }
-                        },
+                  onPressed: () async {
+                    try {
+                      await FirebaseFirestore.instance
+                          .runTransaction((transaction) async {
+                        DocumentSnapshot snapshot = await transaction.get(
+                            FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(users[index].id));
+                        if (snapshot.exists) {
+                          int newCoins = snapshot.get('coins') - 1;
+                          transaction
+                              .update(snapshot.reference, {'coins': newCoins});
+                        }
+                      });
+                    } catch (e) {
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('An error occurred: $e')),
+                      );
+                    }
+                  },
                   child: const Text('Decrease'),
                 ),
               ),
