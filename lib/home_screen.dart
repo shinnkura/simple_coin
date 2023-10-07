@@ -159,6 +159,9 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text(doc['name']),
               subtitle: Text('Coins: ${doc['coins']}'),
               trailing: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                ),
                 onPressed: () async {
                   await FirebaseFirestore.instance
                       .collection('users')
